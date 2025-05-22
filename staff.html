@@ -1,41 +1,170 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>СОТРУДНИКИ</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>СОТРУДНИКИ</title>
 </head>
 <body>
-    <header>
-        <nav class="navigation">
-            <p>FashionStore</p>
-            <a href="index.html">Товары</a>
-            <a href="staff\staff.html">Сотрудники</a>
-            <a href="analitic.html">Аналитика</a>
-            <a href="settings.html">Настройки</a>
-        </nav>  
-    </header>
+  <header>
+    <nav class="navigation">
+      <p>FashionStore</p>
+      <a href="/product">Товары</a>
+      <a href="/staff">Сотрудники</a>
+      <a href="/analitic">Аналитика</a>
+      <a href="/setting">Настройки</a>
+    </nav>  
+  </header>
 
-    <h1>СОТРУДНИКИ</h1>
+  <h1>СОТРУДНИКИ</h1>
 
-    <div class="table staff">
-        <table>
-            <tr>
-                <th>ФИО</th>
-                <th>Роль в системе</th>
-                <th>Логин</th>
-                <th>Должность</th>
-                <th></th>
-            </tr>
-            <tr>
-            
-            </tr>
-        </table>
-    </div>
+  <div class="table staff">
+    <table>
+      <thead>
+        <tr>
+          <th>ФИО</th>
+          <th>Роль в системе</th>
+          <th>Логин</th>
+          <th>Должность</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="staffTableBody">
+        <!-- сюда JS вставит <tr>…</tr> -->
+      </tbody>
+    </table>
+  </div>
 
-    <footer>
-        <p>(c)FashionStore 2025</p>
-    </footer>
+  <div id="editModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Редактировать сотрудника</h2>
+    <form id="editForm">
+      <input type="hidden" name="id" />
+      <label>ФИО: <input type="text" name="full_name" required /></label><br>
+      <label>Роль: <input type="text" name="role" required /></label><br>
+      <label>Логин: <input type="text" name="login" required /></label><br>
+      <label>Должность: <input type="text" name="post" required /></label><br>
+      <button type="submit">Сохранить</button>
+      <button type="button" onclick="closeModal()">Отмена</button>
+    </form>
+  </div>
+</div>
+
+
+  <footer>
+    <p>(c)FashionStore 2025</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/api/staff_table');
+        if (!response.ok) throw new Error('Ошибка загрузки данных');
+
+        const data = await response.json();
+        populateTable(data.users);
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+
+    function populateTable(users) {
+      const tbody = document.getElementById('staffTableBody');
+      tbody.innerHTML = '';
+
+      users.forEach(user => {
+        const row = `
+          <tr>
+            <td>${user.full_name}</td>
+            <td>${user.role}</td>
+            <td>${user.login}</td>
+            <td>${user.post}</td>
+            <td>
+              <button class="edit-btn" data-id="${user.id}">✏️</button>
+              <button class="delete-btn" data-id="${user.id}">🗑️</button>
+              <button class="more-btn" data-id="${user.id}">…</button>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    function showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = message;
+      document.body.prepend(errorDiv);
+      setTimeout(() => errorDiv.remove(), 5000);
+    }
+
+    document.body.addEventListener('click', async (event) => {
+  const editBtn = event.target.closest('.edit-btn');
+  const deleteBtn = event.target.closest('.delete-btn');
+
+  if (editBtn) {
+    const id = editBtn.dataset.id;
+    const row = editBtn.closest('tr');
+    openModal({
+      id,
+      full_name: row.children[0].textContent,
+      role: row.children[1].textContent,
+      login: row.children[2].textContent,
+      post: row.children[3].textContent,
+    });
+  }
+
+  if (deleteBtn) {
+    const id = deleteBtn.dataset.id;
+    if (confirm('Удалить сотрудника?')) {
+      const response = await fetch(`/api/staff/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        deleteBtn.closest('tr').remove();
+      } else {
+        showError('Ошибка удаления');
+      }
+    }
+  }
+});
+
+function openModal(user) {
+  const modal = document.getElementById('editModal');
+  const form = document.getElementById('editForm');
+  for (const key in user) {
+    form.elements[key].value = user[key];
+  }
+  modal.classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.add('hidden');
+}
+
+document.getElementById('editForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const user = {
+    id: form.id.value,
+    full_name: form.full_name.value,
+    role: form.role.value,
+    login: form.login.value,
+    post: form.post.value
+  };
+
+  const response = await fetch(`/api/staff/${user.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(user)
+  });
+
+  if (response.ok) {
+    location.reload(); // можно заменить обновление только строки
+  } else {
+    showError('Ошибка при обновлении');
+  }
+});
+
+  </script>
 </body>
 </html>

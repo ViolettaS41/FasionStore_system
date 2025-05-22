@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/style.css">
     <title>Создать новый товар</title>
 </head>
 <body>
@@ -16,20 +16,55 @@
             <a href="settings.html">Настройки</a>
         </nav>  
     </header>
-    <h1>ТОВАРЫ</h1>
+    <h1>Добавить новый товар</h1>
 
-    <div class="form-add-product">
-        <input type="text" placeholder="Название">
-        <input type="text" placeholder="Артикул">
-        <input type="number" placeholder="Цена">
-        <input type="text" placeholder="Категория">
-        <input type="text" placeholder="Параметры">
-        <input type="number" placeholder="Количество">
+    <form id="addProductForm" class="form-add-product">
+        <input name="name"        type="text"    placeholder="Название" required>
+        <input name="article"     type="text"    placeholder="Артикул" maxlength="10" required>
+        <input name="price"       type="number"  placeholder="Цена" step="0.01" required>
+        <input name="category"    type="text"    placeholder="Категория" required>
+        <input name="parametrs"   type="text"    placeholder="Параметры">
+        <input name="quantity"    type="number"  placeholder="Количество" required>
         <button type="submit">Сохранить</button>
-    </div>
+    </form>
 
     <footer>
-        <p>(c)FashionStore 2025</p>
+        <p>(c) FashionStore 2025</p>
     </footer>
+
+    <script>
+    document
+      .getElementById('addProductForm')
+      .addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const form = e.target;
+        const data = {
+          name:       form.name.value.trim(),
+          article:    form.article.value.trim(),
+          category:   form.category.value.trim(),
+          parametrs:  form.parametrs.value.trim(),
+          price:      parseFloat(form.price.value),
+          quantity:   parseInt(form.quantity.value, 10)
+        };
+
+        try {
+          const res = await fetch('/api/add_products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || 'Ошибка сохранения');
+          }
+          const result = await res.json();
+          alert('Товар сохранён, id = ' + result.inserted_id);
+          window.location.href = 'http://127.0.0.1:8000/product';
+        } catch (err) {
+          alert('Ошибка: ' + err.message);
+        }
+      });
+    </script>
 </body>
 </html>

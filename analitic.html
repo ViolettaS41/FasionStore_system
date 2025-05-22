@@ -1,38 +1,93 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>АНАЛИТИКА</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <title>АНАЛИТИКА</title>
+  <style>
+  .graph-image {
+    width: 90%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+  .graph-btn.active-graph {
+    color: #156B60;
+    text-decoration: underline;
+}
+</style>
+
 </head>
 <body>
-    <header>
-        <nav class="navigation">
-            <p>FashionStore</p>
-            <a href="index.html">Товары</a>
-            <a href="staff\staff.html">Сотрудники</a>
-            <a href="analitic.html">Аналитика</a>
-            <a href="settings.html">Настройки</a>
-        </nav>  
-    </header>
+  <header>
+    <nav class="navigation">
+      <p>FashionStore</p>
+      <a href="/product">Товары</a>
+      <a href="/staff">Сотрудники</a>
+      <a href="/analitic">Аналитика</a>
+      <a href="/setting">Настройки</a>
+    </nav>  
+  </header>
 
-    <h1>АНАЛИТИКА</h1>
+  <h1>АНАЛИТИКА</h1>
 
-    <div class="analitic">
-        <p>Продажи</p>
-        <p>Эффективность сотрудников</p>
-        <p>Олата</p>
-        <div class="grafic"></div>
-        <button class="period-btn">Сегодня/Вчера</button>
-        <button class="period-btn">За неделю</button>
-        <button class="period-btn">За месяц</button>
-        <button class="period-btn">Другой период</button>
+  <section class="analitic">
+    <div class="graph-button">
+        <span class="graph-btn active-graph" data-graph="sales">Продажи</span>
+        <span class="graph-btn" data-graph="efficiency">Эффективность сотрудников</span>
+        <span class="graph-btn" data-graph="payment">Оплата</span>
     </div>
 
+    <div class="grafic" id="graficContainer">
+      <!-- Сюда будет подставляться график -->
+    </div>
+    <div class="period-buttons">
+      <button class="period-btn">Сегодня/Вчера</button>
+    <button class="period-btn">За неделю</button>
+    <button class="period-btn">За месяц</button>
+    <button class="period-btn">Другой период</button>  
+    </div>
+    
+  </section>
 
-    <footer>
-        <p>(c)FashionStore 2025</p>
-    </footer>
+  <footer>
+    <p>(c)FashionStore 2025</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const buttons = document.querySelectorAll('.graph-btn');
+      const graphContainer = document.getElementById('graficContainer');
+
+      buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            buttons.forEach(btn=> btn.classList.remove('active-graph'));
+            button.classList.add('active-graph');
+          const graphType = button.dataset.graph;
+          let imagePath = '';
+
+          switch (graphType) {
+            case 'sales':
+              imagePath = '/static/img/sales.png';
+              break;
+            case 'efficiency':
+              imagePath = '/static/img/kpi.png';
+              break;
+            case 'payment':
+              imagePath = '/static/img/payment.png';
+              break;
+            default:
+              imagePath = '';
+          }
+
+          if (imagePath) {
+            graphContainer.innerHTML = `<img src="${imagePath}" alt="${graphType}" class="graph-image">`;
+          }
+        });
+      });
+    });
+    
+  </script>
 </body>
 </html>

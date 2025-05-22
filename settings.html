@@ -1,31 +1,57 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>НАСТРОЙКИ</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>НАСТРОЙКИ</title>
+  <style>
+    /* Простые стили для модалки */
+    .modal-backdrop {
+      display: none;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center; align-items: center;
+    }
+    .modal {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .modal input {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+    }
+    .modal button {
+      margin-right: 0.5rem;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <nav class="navigation">
-            <p>FashionStore</p>
-            <a href="index.html">Товары</a>
-            <a href="staff\staff.html">Сотрудники</a>
-            <a href="analitic.html">Аналитика</a>
-            <a href="settings.html">Настройки</a>
-        </nav>  
-    </header>
+  <header>
+    <nav class="navigation">
+      <p>FashionStore</p>
+      <a href="/product">Товары</a>
+      <a href="/staff">Сотрудники</a>
+      <a href="/analitic">Аналитика</a>
+      <a href="/setting">Настройки</a>
+    </nav>
+  </header>
 
-    <h1>НАСТРОЙКИ</h1>
-    
-    <div class="settings">
-        <div class="category">
-            <h2>КАТЕГОРИИ ТОВАРОВ</h2>
-            <p>Создать категорию</p>
-            <p>Редактировать категорию</p>
-            <p>Привязать подкатегорию</p>
-        </div>
+  <h1>НАСТРОЙКИ</h1>
+  
+  <div class="settings">
+    <div class="category">
+      <h2>КАТЕГОРИИ ТОВАРОВ</h2>
+      <p id="openCreateCat">Создать категорию</p>
+      <p>Редактировать категорию</p>
+      <p>Привязать подкатегорию</p>
+    </div>
         <div class="parameters">
             <h2>ПАРАМЕТРЫ ТОВАРОВ</h2>
             <p>Цвета</p>
@@ -44,9 +70,70 @@
             <p>Расписание автоматического бекапа</p>
         </div>
     </div>
+<div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <h3>Новая категория</h3>
+      <input type="text" id="catName" placeholder="Название категории" maxlength="200">
+      <div style="text-align: right;">
+        <button id="saveCat">Сохранить</button>
+        <button id="cancelCat">Отмена</button>
+      </div>
+    </div>
+  </div>
 
-    <footer>
-        <p>(c)FashionStore 2025</p>
-    </footer>
+  <footer>
+    <p>(c)FashionStore 2025</p>
+  </footer>
+
+  <script>
+    const backdrop = document.getElementById('modalBackdrop');
+    const btnOpen  = document.getElementById('openCreateCat');
+    const btnSave  = document.getElementById('saveCat');
+    const btnCancel= document.getElementById('cancelCat');
+    const input    = document.getElementById('catName');
+
+    // Показать модалку
+    btnOpen.addEventListener('click', () => {
+      input.value = '';
+      backdrop.style.display = 'flex';
+      input.focus();
+    });
+
+    // Скрыть модалку
+    btnCancel.addEventListener('click', () => {
+      backdrop.style.display = 'none';
+    });
+
+    // Сохранить в БД
+    btnSave.addEventListener('click', async () => {
+      const name = input.value.trim();
+      if (!name) {
+        alert('Введите название категории');
+        return;
+      }
+      try {
+        const res = await fetch('/api/categories', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ name })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Ошибка сервера');
+        }
+        const data = await res.json();
+        alert(`Категория сохранена (id=${data.id})`);
+        backdrop.style.display = 'none';
+        // TODO: после сохранения можно обновить список категорий на странице
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    });
+
+    // Закрыть при клике вне модалки
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) backdrop.style.display = 'none';
+    });
+  </script>
 </body>
 </html>

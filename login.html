@@ -4,18 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Авторизация в системе</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Стили для модального окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .close-btn {
+            background: #23B2A0;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <nav>FashionStore</nav>
     <h1 class="log-h1">Авторизация</h1>
-    <div class="form-login">
-        <input type="text" name="login" id="login" placeholder="Логин">
-        <input type="password" name="password" id="password" placeholder="Пароль">
-        <button class="password-off-on-btn">
-            <img src="img\Vector.png">
+    <form id="loginForm" class="form-login">
+        <input type="text" name="login" id="login" placeholder="Логин" required>
+        <input type="password" name="password" id="password" placeholder="Пароль" required>
+        <button type="button" class="password-off-on-btn">
+            <img src="/static/img/Vector.png" alt="Показать пароль">
         </button>
         <button type="submit">Войти</button>
+    </form>
+
+    <!-- Модальное окно для ошибок -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <h3>Ошибка авторизации</h3>
+            <p id="errorMessage">Неверный логин или пароль</p>
+            <button class="close-btn" onclick="closeModal()">Закрыть</button>
+        </div>
     </div>
+
+    <script>
+        // Обработчик отправки формы
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/user/id', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        login: login,
+                        password: password
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    window.location.href = 'http://127.0.0.1:8000/product'; 
+                } else {
+                    showModal('Неверный логин или пароль');
+                }
+            } catch (error) {
+                showModal('Ошибка соединения с сервером');
+            }
+        });
+
+        // Показать/скрыть пароль
+        document.querySelector('.password-off-on-btn').addEventListener('click', () => {
+            const passwordField = document.getElementById('password');
+            const icon = document.querySelector('.password-off-on-btn img');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.src = '/static/img/Vector.png'; // Иконка открытого глаза
+            } else {
+                passwordField.type = 'password';
+                icon.src = '/static/img/Vector.png'; // Иконка закрытого глаза
+            }
+        });
+
+        // Управление модальным окном
+        function showModal(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('errorModal').style.display = 'none';
+        }
+
+        // Закрытие модалки при клике вне контента
+        window.onclick = function(event) {
+            const modal = document.getElementById('errorModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
 </body>
 </html>
